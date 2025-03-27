@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from '@apollo/client/core'
+import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client/core'
 import { createUploadLink } from 'apollo-upload-client'
 import { DefaultApolloClient } from '@vue/apollo-composable'
 import { BatchHttpLink } from '@apollo/client/link/batch-http'

@@ -10,7 +10,9 @@ const queryRef = ref<any>(null)
 const variablesRef = ref<any>(null)
 const responseRef = ref<any>(null)
 
-const active = computed(() => entries.flat().find(item => item?.id === activeId.value))
+const active = computed(() =>
+  entries.flat().find(item => item?.id === activeId.value),
+)
 
 const bps = useBreakpoints(breakpointsTailwind)
 
@@ -31,7 +33,7 @@ function onQueryResize(value: number) {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col bg-gray1 md:flex-row">
+  <div class="app-wda h-screen flex flex-col bg-gray1 md:flex-row">
     <MainPanel class="border-b border-gray4 md:(border-b-0 border-r)" />
     <SplitPane
       :min-size="10"
@@ -63,10 +65,7 @@ function onQueryResize(value: number) {
               @resize="onQueryResize"
             >
               <template #left>
-                <Query
-                  ref="queryRef"
-                  :entry="active"
-                />
+                <Query ref="queryRef" :entry="active" />
               </template>
               <template v-if="active.request.method !== 'GET'" #right>
                 <Variables

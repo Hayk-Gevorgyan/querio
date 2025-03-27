@@ -1,4 +1,11 @@
-import type { DefinitionNode, FieldNode, InlineFragmentNode, OperationDefinitionNode, OperationTypeNode, SelectionNode } from 'graphql'
+import type {
+  DefinitionNode,
+  FieldNode,
+  InlineFragmentNode,
+  OperationDefinitionNode,
+  OperationTypeNode,
+  SelectionNode,
+} from 'graphql'
 import type { Header, Param } from 'har-format'
 import { Kind, parse } from 'graphql'
 import { getQuery, parseURL } from 'ufo'
@@ -51,7 +58,9 @@ function isContentType(request: { headers: Header[] }, contentType: string) {
   )
 }
 
-function isOperationDefinition(node: DefinitionNode): node is OperationDefinitionNode {
+function isOperationDefinition(
+  node: DefinitionNode,
+): node is OperationDefinitionNode {
   return node.kind === Kind.OPERATION_DEFINITION
 }
 
@@ -67,14 +76,17 @@ function isValidQuery(query: string) {
 }
 
 function getName(node: SelectionNode): string {
-  if (isInlineFragment(node) && node.typeCondition)
+  if (isInlineFragment(node) && node.typeCondition) {
     return `InlineFragment if ${node.typeCondition.name.value}`
-
-  else if (isField(node))
-    return node.alias ? `${node.alias.value}: ${node.name.value}` : node.name.value
-
-  else
+  }
+  else if (isField(node)) {
+    return node.alias
+      ? `${node.alias.value}: ${node.name.value}`
+      : node.name.value
+  }
+  else {
     return 'Anonymous'
+  }
 }
 
 function parseOperation(definition: SelectionNode) {
@@ -107,11 +119,11 @@ export function isGQLEntry(entry: Entry): entry is GQLEntry {
   return entry?.type === 'GQL'
 }
 
-export function isHTTP(entry: HAREntry) {
+export function isHTTP(entry: HAREntry): boolean {
   return ['xhr', 'fetch', 'preflight'].includes(entry._resourceType)
 }
 
-export function isGraphQL(entry: HAREntry) {
+export function isGraphQL(entry: HAREntry): boolean {
   const { text, params } = entry.request.postData || {}
 
   let query: string | undefined
@@ -130,7 +142,10 @@ export function isGraphQL(entry: HAREntry) {
       }
     }
   }
-  else if (isContentType(entry.request, 'application/x-www-form-urlencoded') && params) {
+  else if (
+    isContentType(entry.request, 'application/x-www-form-urlencoded')
+    && params
+  ) {
     query = getQueryValue('query', params)
   }
 
@@ -178,14 +193,17 @@ function isArray(arr: any): arr is any[] {
   return Array.isArray(arr)
 }
 
-export async function parseGQLEntry(entry: HAREntry): Promise<GQLEntry | GQLEntry[]> {
+export async function parseGQLEntry(
+  entry: HAREntry,
+): Promise<GQLEntry | GQLEntry[]> {
   const parsedQueries: ParsedQuery[] = []
   const { postData, queryString } = entry.request
 
   let json: ParsedQuery | null = null
 
   if (
-    (isContentType(entry.request, 'application/json') && entry.request.method === 'GET')
+    (isContentType(entry.request, 'application/json')
+      && entry.request.method === 'GET')
     || isContentType(entry.request, 'application/x-www-form-urlencoded')
   ) {
     const params = entry.request.method === 'GET' ? queryString : postData?.params
@@ -243,36 +261,38 @@ export async function parseGQLEntry(entry: HAREntry): Promise<GQLEntry | GQLEntr
     })
   })
 
-  const fullParsedQueries = await Promise.all(parsedQueries.map(async (parsedQuery, i) => {
-    const { data, query, variables, operationName, batch } = parsedQuery
-    const { name, type, operations } = data[0]
-    const { request, response, ...base } = getEntryInfo(entry)
+  const fullParsedQueries = await Promise.all(
+    parsedQueries.map(async (parsedQuery, i) => {
+      const { data, query, variables, operationName, batch } = parsedQuery
+      const { name, type, operations } = data[0]
+      const { request, response, ...base } = getEntryInfo(entry)
 
-    const getResponse = async () => {
-      const body = await getContent(entry)
+      const getResponse = async () => {
+        const body = await getContent(entry)
 
-      return Array.isArray(body) ? body[i] : body
-    }
+        return Array.isArray(body) ? body[i] : body
+      }
 
-    return {
-      ...base,
-      type: 'GQL',
-      request: {
-        ...request,
-        name: operationName || name,
-        operations,
-        operationType: type,
-        query,
-        variables,
-        batch,
-      },
-      response: {
-        ...response,
-        isError: response.isError || !!(await getResponse()).errors,
-        getResponse,
-      },
-    }
-  }))
+      return {
+        ...base,
+        type: 'GQL',
+        request: {
+          ...request,
+          name: operationName || name,
+          operations,
+          operationType: type,
+          query,
+          variables,
+          batch,
+        },
+        response: {
+          ...response,
+          isError: response.isError || !!(await getResponse()).errors,
+          getResponse,
+        },
+      }
+    }),
+  )
 
   return isArray(json) ? fullParsedQueries : fullParsedQueries[0]
 }
@@ -298,7 +318,8 @@ function getEntryInfo(entry: HAREntry): BaseEntry {
   const { url, postData, headers: requestHeaders, method } = entry.request
   const { content, headers: responseHeaders, status } = entry.response
   const isError = status >= 400 || status === 0
-  const statusMessage = httpStatus[+status]
+  const key = String(status) as keyof typeof httpStatus
+  const statusMessage = httpStatus[key]
   const timestamp = new Date(entry.startedDateTime).getTime()
 
   return {
@@ -313,7 +334,7 @@ function getEntryInfo(entry: HAREntry): BaseEntry {
     },
     response: {
       status,
-      statusMessage,
+      statusMessage: String(statusMessage),
       isError,
       headers: responseHeaders,
       mimeType: content.mimeType,

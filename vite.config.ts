@@ -27,11 +27,11 @@ export default defineConfig({
       imports: [
         'vue',
         '@vueuse/core',
-        {
-          'webextension-polyfill': [
-            ['*', 'browser'],
-          ],
-        },
+        // {
+        //   'webextension-polyfill': [
+        //     ['*', 'browser'],
+        //   ],
+        // },
       ],
       dts: r('src/auto-imports.d.ts'),
       dirs: ['src/composables', 'src/utils'],
