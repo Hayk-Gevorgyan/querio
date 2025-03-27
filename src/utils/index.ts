@@ -347,7 +347,7 @@ export function formatData(data: string, mimeType: string) {
     return prettier.format(data, { semi: false, parser: 'html', plugins: [htmlParser] })
   else if (['application/xml', 'text/xml'].includes(mimeType))
     return prettier.format(data, { semi: false, parser: 'xml', plugins: [xmlParser] })
-  else if (['application/json', 'text/json'].includes(mimeType))
+  else if (['application/json', 'text/json'].includes(mimeType) || ['application/json', 'text/json'].some(t => mimeType.includes(t)))
     return JSON.stringify(data, null, 2)
   else
     return data
